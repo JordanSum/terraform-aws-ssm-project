@@ -1,0 +1,27 @@
+# Example Terraform variables file
+# Copy this file to terraform.tfvars and update with your actual values
+# DO NOT commit terraform.tfvars to version control
+
+# Project configuration
+project_name = "your_project_name"
+
+# Network configuration
+cidr_block = "10.0.0.0/16"          # VPC CIDR block
+subnet_one = "10.0.1.0/24"          # First subnet CIDR
+subnet_two = "10.0.2.0/24"          # Second subnet CIDR
+
+# Environment (dev, staging, prod)
+environment = "dev"
+
+# EC2 configuration
+ami_id = "ami-xxxxxxxxxxxxxxxxx"     # Amazon Linux 2 AMI ID for your region
+instance_type = "t2.micro"          # EC2 instance type
+
+# AWS region (optional - can also be set via AWS_DEFAULT_REGION env var)
+# aws_region = "us-west-2"
+
+# Notes:
+# - Update ami_id with the latest Amazon Linux 2 AMI for your target region
+# - Ensure CIDR blocks don't conflict with existing VPCs
+# - Choose instance_type based on your workload requirements
+# - Use descriptive project_name for resource identification
