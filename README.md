@@ -1,6 +1,6 @@
 # AWS Systems Manager (SSM) Infrastructure with Terraform
 
-A secure, scalable Infrastructure as Code (IaC) solution demonstrating enterprise-grade AWS architecture using Terraform modules for EC2 instance management via AWS Systems Manager without traditional SSH access.
+A secure, scalable Infrastructure as Code (IaC) solution demonstrating AWS architecture using Terraform modules for EC2 instance management via AWS Systems Manager without traditional SSH access.
 
 ## 🏗️ Architecture Overview
 
