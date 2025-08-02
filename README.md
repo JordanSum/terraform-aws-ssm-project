@@ -284,7 +284,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📞 Contact
 
-**Jordan** - [Your LinkedIn](https://linkedin.com/in/yourprofile) - your.email@example.com
+**Jordan** - [LinkedIn](https://linkedin.com/in/sumnertech) - [Resume Website](https://sumnertech.net)
 
 Project Link: [https://github.com/JordanSum/terraform-aws-ssm-project](https://github.com/JordanSum/terraform-aws-ssm-project)
 
