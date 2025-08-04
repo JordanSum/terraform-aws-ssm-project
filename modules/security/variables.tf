@@ -1,5 +1,10 @@
-variable "vpc_id" {
+variable "vpc_id_west" {
   description = "The ID of the VPC"
+  type        = string
+}
+
+variable "vpc_id_east" {
+  description = "The ID of the VPC in the East Coast"
   type        = string
 }
 
@@ -9,20 +14,26 @@ variable "cidr_block" {
   
 }
 
-variable "subnet_one" {
-  description = "CIDR block for subnet one"
+variable "subnet_one_west" {
+  description = "The ID of subnet one"
   type        = string
   
 }
 
-variable "subnet_two" {
-  description = "CIDR block for subnet two"
+variable "subnet_two_west" {
+  description = "The ID of subnet two"
   type        = string
   
 }
 
-variable "vpc_endpoint_sg" {
-  description = "Security Group ID for VPC endpoints"
+variable "subnet_one_east" {
+  description = "The ID of subnet one in East region"
+  type        = string
+  
+}
+
+variable "subnet_two_east" {
+  description = "The ID of subnet two in East region"
   type        = string
   
 }

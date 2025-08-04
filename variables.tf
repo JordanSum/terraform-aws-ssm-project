@@ -15,21 +15,38 @@ variable "project_name" {
   type        = string
 }
 
-variable "subnet_one" {
+variable "subnet_one_west" {
   description = "CIDR block for subnet one"
   type        = string
   }
 
-variable "subnet_two" {
+variable "subnet_two_west" {
   description = "CIDR block for subnet two"
   type        = string
   
 }
 
-variable "ami_id" {
+variable "subnet_one_east" {
+  description = "CIDR block for subnet one in the East Coast"
+  type        = string
+  
+}
+
+variable "subnet_two_east" {
+  description = "CIDR block for subnet two in the East Coast"
+  type        = string
+  
+}
+
+variable "ami_id_west" {
   description = "AMI ID for EC2 instances"
   type        = string
   
+}
+
+variable "ami_id_east" {
+  description = "AMI ID for EC2 instances in the East region"
+  type        = string
 }
 
 variable "instance_type" {
