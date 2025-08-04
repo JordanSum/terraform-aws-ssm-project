@@ -20,12 +20,12 @@ subnet_two_east = "10.0.30.0/24"         # Second subnet in us-east-2b
 
 # EC2 configuration (region-specific AMIs required)
 ami_id_west = "ami-054b7fc3c333ac6d2"    # Amazon Linux 2023 AMI ID for us-west-2
-ami_id_east = "ami-068d5d5ed1eeea07c"    # Amazon Linux 2023 AMI ID for us-east-2
+ami_id_east = "ami-068d5d5ed1eeea07c"    # RHEL 10.0.0 x86_64 AMI ID for us-east-2
 instance_type = "t2.micro"               # EC2 instance type
 
 # Notes:
 # - Update ami_id_west with the latest Amazon Linux 2023 AMI for us-west-2
-# - Update ami_id_east with the latest Amazon Linux 2023 AMI for us-east-2
+# - Update ami_id_east with the latest RHEL 10.0.0 x86_64 AMI for us-east-2
 # - Ensure CIDR blocks don't conflict with existing VPCs in either region
 # - Choose instance_type based on your workload requirements
 # - Use descriptive project_name for resource identification across regions
@@ -34,10 +34,10 @@ instance_type = "t2.micro"               # EC2 instance type
 
 # Example AMI IDs (update with current ones):
 # us-west-2: ami-054b7fc3c333ac6d2 (Amazon Linux 2023)
-# us-east-2: ami-068d5d5ed1eeea07c (Amazon Linux 2023)
+# us-east-2: ami-068d5d5ed1eeea07c (RHEL 10.0.0 x86_64)
 
 # Multi-Region Architecture:
 # - West Region (us-west-2): 192.168.0.0/16 network
 # - East Region (us-east-2): 10.0.0.0/16 network
 # - VPC Peering: Enabled between regions for cross-region connectivity
-# - SSM Agent: Pre-installed on Amazon Linux 2023 AMIs
+# - SSM Agent: Pre-installed on RHEL 10.0.0 x86_64 AMIs
