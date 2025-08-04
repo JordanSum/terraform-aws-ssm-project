@@ -31,7 +31,7 @@ resource "aws_network_interface" "NIC1" {
     security_groups = [var.instance_SG_west]
 
     tags = {
-        Name = "primary_network_interface"
+        Name = "primary_network_interface_west"
     }
 }
 
@@ -58,7 +58,7 @@ resource "aws_network_interface" "NIC2" {
     security_groups = [var.instance_SG_west]
 
     tags = {
-        Name = "Secondary_network_interface"
+        Name = "secondary_network_interface_west"
     }
 }
 
@@ -66,7 +66,6 @@ resource "aws_instance" "ssm_test_3" {
     provider         = aws.east
     ami              = var.ami_id_east
     instance_type    = var.instance_type
-    key_name             = "Terraform-VM-Key"
     iam_instance_profile = var.iam_profile
 
     network_interface {
@@ -121,8 +120,27 @@ resource "aws_instance" "ssm_test_3" {
               sleep 10
               echo "SSM Agent status:"
               sudo systemctl status amazon-ssm-agent
-              
-              echo "User-data script completed at $(date)"
+
+              sleep 30
+              sudo dnf install -y httpd
+
+              sudo bash -c 'cat > /var/www/html/index.html << HTML
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>East Region Instance</title>
+                </head>
+                <body>
+                    <h1>Hello from East Region!</h1>
+                    <p>This is instance $(hostname) in the us-east-2 region.</p>
+                    <p>Private IP: $(hostname -I | awk "{print \$1}")</p>
+                    <p>Current time: $(date)</p>
+                </body>
+                </html>
+                HTML' 
+
+              sudo systemctl start httpd
+              sudo systemctl enable httpd
               EOF
     
     
@@ -134,7 +152,7 @@ resource "aws_instance" "ssm_test_3" {
 resource "aws_network_interface" "NIC3" {
     provider        = aws.east
     subnet_id       = var.subnet_one_east
-    private_ips     = ["192.168.40.10"]
+    private_ips     = ["10.0.20.10"]
     security_groups = [var.instance_SG_east]
 
     tags = {
@@ -146,7 +164,6 @@ resource "aws_instance" "ssm_test_4" {
     provider         = aws.east
     ami              = var.ami_id_east
     instance_type    = var.instance_type
-    key_name             = "Terraform-VM-Key"
     iam_instance_profile = var.iam_profile
 
     network_interface {
@@ -157,6 +174,9 @@ resource "aws_instance" "ssm_test_4" {
    user_data = <<-EOF
               #!/bin/bash
               # Enhanced SSM Agent Installation Script
+              # Log all output to help with debugging
+              exec > >(tee /var/log/user-data.log) 2>&1
+              echo "Starting user-data script at $(date)"
               
               # Wait for system to stabilize and network to be ready
               echo "Waiting for system stabilization..."
@@ -209,7 +229,7 @@ resource "aws_instance" "ssm_test_4" {
 resource "aws_network_interface" "NIC4" {
     provider        = aws.east
     subnet_id       = var.subnet_two_east
-    private_ips     = ["192.168.50.10"]
+    private_ips     = ["10.0.30.10"]
     security_groups = [var.instance_SG_east]
 
     tags = {

@@ -12,7 +12,7 @@ terraform {
 
 resource "aws_vpc" "vpc_west" {
   provider             = aws.west
-  cidr_block           = var.cidr_block
+  cidr_block           = var.cidr_block_west
   enable_dns_hostnames = true
   enable_dns_support   = true
   
@@ -51,7 +51,7 @@ resource "aws_subnet" "subnet_two_west" {
 
 resource "aws_vpc" "vpc_east" {
   provider             = aws.east
-  cidr_block           = var.cidr_block
+  cidr_block           = var.cidr_block_east
   enable_dns_hostnames = true
   enable_dns_support   = true
   
@@ -121,4 +121,27 @@ resource "aws_route_table_association" "east_subnet_two" {
     provider       = aws.east
     subnet_id      = aws_subnet.subnet_two_east.id
     route_table_id = aws_route_table.public_east.id
+}
+
+# Route table for west region
+resource "aws_route_table" "public_west" {
+  provider = aws.west
+  vpc_id   = aws_vpc.vpc_west.id
+
+  tags = {
+    Name = "${var.project_name}-rt-west"
+  }
+}
+
+# Associate west subnets with west route table
+resource "aws_route_table_association" "west_subnet_one" {
+    provider       = aws.west
+    subnet_id      = aws_subnet.subnet_one_west.id
+    route_table_id = aws_route_table.public_west.id
+}
+
+resource "aws_route_table_association" "west_subnet_two" {
+    provider       = aws.west
+    subnet_id      = aws_subnet.subnet_two_west.id
+    route_table_id = aws_route_table.public_west.id
 }

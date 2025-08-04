@@ -8,8 +8,14 @@ variable "vpc_id_east" {
   type        = string
 }
 
-variable "cidr_block" {
+variable "cidr_block_west" {
   description = "The CIDR block of the VPC"
+  type        = string
+  
+}
+
+variable "cidr_block_east" {
+  description = "The CIDR block of the VPC in the East Coast"
   type        = string
   
 }

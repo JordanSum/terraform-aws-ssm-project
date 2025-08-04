@@ -48,7 +48,7 @@ resource "aws_security_group" "vpc_endpoints_sg_west" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.cidr_block]
+    cidr_blocks = [var.cidr_block_west]
   }
 
   egress {
@@ -75,7 +75,7 @@ resource "aws_security_group" "vpc_endpoints_sg_east" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.cidr_block]
+    cidr_blocks = [var.cidr_block_east]
   }
 
   egress {
@@ -199,7 +199,7 @@ resource "aws_security_group" "instance_SG_west" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.cidr_block]
+    cidr_blocks = [var.cidr_block_west]
   }
 
   # Allow all outbound traffic (can be restricted later)
@@ -212,27 +212,35 @@ resource "aws_security_group" "instance_SG_west" {
   }
 
   ingress {
-    description = "HTTP from VPC"
+    description = "HTTP from local VPC"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = [var.cidr_block]
+    cidr_blocks = [var.cidr_block_west]
   }
 
   ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
+    description = "HTTP from peer VPC (East)"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = [var.cidr_block]
+    cidr_blocks = [var.cidr_block_east]
   }
 
   ingress {
-    description = "HTTPS from VPC"
+    description = "HTTPS from local VPC"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.cidr_block]
+    cidr_blocks = [var.cidr_block_west]
+  }
+
+  ingress {
+    description = "HTTPS from peer VPC (East)"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.cidr_block_east]
   }
 
   tags = {
@@ -253,7 +261,7 @@ resource "aws_security_group" "instance_SG_east" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.cidr_block]
+    cidr_blocks = [var.cidr_block_east]
   }
 
   # Allow all outbound traffic (can be restricted later)
@@ -266,11 +274,35 @@ resource "aws_security_group" "instance_SG_east" {
   }
 
   ingress {
-    description = "HTTPS"
+    description = "HTTPS from local VPC"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.cidr_block_east]
+  }
+
+  ingress {
+    description = "HTTPS from peer VPC (West)"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.cidr_block_west]
+  }
+
+  ingress {
+    description = "HTTP from local VPC"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [var.cidr_block_east]
+  }
+
+  ingress {
+    description = "HTTP from peer VPC (West)"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [var.cidr_block_west]
   }
 
   tags = {

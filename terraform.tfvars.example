@@ -1,27 +1,43 @@
-# Example Terraform variables file
+# Example Terraform variables file for Multi-Region AWS SSM Project
 # Copy this file to terraform.tfvars and update with your actual values
 # DO NOT commit terraform.tfvars to version control
 
 # Project configuration
-project_name = "your_project_name"
+project_name = "ssm_project_terraform"    # Descriptive name for your project
+environment = "dev"                       # Environment: dev, staging, prod
 
-# Network configuration
-cidr_block = "10.0.0.0/16"          # VPC CIDR block
-subnet_one = "10.0.1.0/24"          # First subnet CIDR
-subnet_two = "10.0.2.0/24"          # Second subnet CIDR
+# Network configuration (different CIDR blocks for each region)
+cidr_block_west = "192.168.0.0/16"       # West region VPC CIDR block
+cidr_block_east = "10.0.0.0/16"          # East region VPC CIDR block
 
-# Environment (dev, staging, prod)
-environment = "dev"
+# US-West-2 (Oregon) subnets
+subnet_one_west = "192.168.20.0/24"      # First subnet in us-west-2a
+subnet_two_west = "192.168.30.0/24"      # Second subnet in us-west-2b
 
-# EC2 configuration
-ami_id = "ami-xxxxxxxxxxxxxxxxx"     # Amazon Linux 2 AMI ID for your region
-instance_type = "t2.micro"          # EC2 instance type
+# US-East-2 (Ohio) subnets  
+subnet_one_east = "10.0.20.0/24"         # First subnet in us-east-2a
+subnet_two_east = "10.0.30.0/24"         # Second subnet in us-east-2b
 
-# AWS region (optional - can also be set via AWS_DEFAULT_REGION env var)
-# aws_region = "us-west-2"
+# EC2 configuration (region-specific AMIs required)
+ami_id_west = "ami-054b7fc3c333ac6d2"    # Amazon Linux 2023 AMI ID for us-west-2
+ami_id_east = "ami-068d5d5ed1eeea07c"    # Amazon Linux 2023 AMI ID for us-east-2
+instance_type = "t2.micro"               # EC2 instance type
 
 # Notes:
-# - Update ami_id with the latest Amazon Linux 2 AMI for your target region
-# - Ensure CIDR blocks don't conflict with existing VPCs
+# - Update ami_id_west with the latest Amazon Linux 2023 AMI for us-west-2
+# - Update ami_id_east with the latest Amazon Linux 2023 AMI for us-east-2
+# - Ensure CIDR blocks don't conflict with existing VPCs in either region
 # - Choose instance_type based on your workload requirements
-# - Use descriptive project_name for resource identification
+# - Use descriptive project_name for resource identification across regions
+# - Different CIDR blocks are used for each region to enable VPC peering
+# - VPC peering requires non-overlapping CIDR ranges
+
+# Example AMI IDs (update with current ones):
+# us-west-2: ami-054b7fc3c333ac6d2 (Amazon Linux 2023)
+# us-east-2: ami-068d5d5ed1eeea07c (Amazon Linux 2023)
+
+# Multi-Region Architecture:
+# - West Region (us-west-2): 192.168.0.0/16 network
+# - East Region (us-east-2): 10.0.0.0/16 network
+# - VPC Peering: Enabled between regions for cross-region connectivity
+# - SSM Agent: Pre-installed on Amazon Linux 2023 AMIs
