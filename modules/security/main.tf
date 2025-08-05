@@ -243,6 +243,22 @@ resource "aws_security_group" "instance_SG_west" {
     cidr_blocks = [var.cidr_block_east]
   }
 
+  ingress {
+    description = "ICMP from local VPC"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.cidr_block_west]
+  }
+
+  ingress {
+    description = "ICMP from peer VPC (East)"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.cidr_block_east]
+  }
+
   tags = {
     Name = "Instance_SG_West"
   }
@@ -302,6 +318,22 @@ resource "aws_security_group" "instance_SG_east" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
+    cidr_blocks = [var.cidr_block_west]
+  }
+
+  ingress {
+    description = "ICMP from local VPC"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.cidr_block_east]
+  }
+
+  ingress {
+    description = "ICMP from peer VPC (West)"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
     cidr_blocks = [var.cidr_block_west]
   }
 
