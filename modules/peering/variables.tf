@@ -1,7 +1,7 @@
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  
+
 }
 
 variable "enable_vpc_peering" {
@@ -27,7 +27,7 @@ variable "cidr_block_west" {
 }
 
 variable "cidr_block_east" {
-  description = "CIDR block for east VPC"  
+  description = "CIDR block for east VPC"
   type        = string
   default     = "10.1.0.0/16"
 }

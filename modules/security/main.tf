@@ -1,9 +1,9 @@
 terraform {
   required_providers {
     aws = {
-      source  = "hashicorp/aws"
-      version = "~> 6.4.0"
-      configuration_aliases = [aws.west, aws.east]
+      source                = "hashicorp/aws"
+      version               = "~> 6.4.0"
+      configuration_aliases = [aws.west2, aws.east]
     }
   }
 }
@@ -36,9 +36,35 @@ resource "aws_iam_instance_profile" "ec2_ssm_instance_profile" {
   role = aws_iam_role.ec2_ssm_role.name
 }
 
+#Define IAM role for AWS Backup Selection
+resource "aws_iam_role" "backup_selection_role" {
+  name = "backup_selection_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "backup.amazonaws.com"
+        }
+        Effect = "Allow"
+        Sid    = ""
+      }
+    ]
+  })
+}
+resource "aws_iam_role_policy_attachment" "backup_selection_policy_attachment" {
+  role       = aws_iam_role.backup_selection_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+}
+resource "aws_iam_instance_profile" "backup_selection_instance_profile" {
+  name = "backup_selection_instance_profile"
+  role = aws_iam_role.backup_selection_role.name
+}
+
 # Create a security group for VPC endpoints - West Region
 resource "aws_security_group" "vpc_endpoints_sg_west" {
-  provider    = aws.west
+  provider    = aws.west2
   name_prefix = "vpc_endpoints_sg_west"
   description = "Security group for VPC endpoints in West region"
   vpc_id      = var.vpc_id_west
@@ -92,15 +118,15 @@ resource "aws_security_group" "vpc_endpoints_sg_east" {
 
 # VPC Endpoint for SSM - West Region
 resource "aws_vpc_endpoint" "ssm_west" {
-  provider            = aws.west
-  vpc_id              = var.vpc_id_west
-  service_name        = "com.amazonaws.us-west-2.ssm"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = [var.subnet_one_west, var.subnet_two_west]
-  security_group_ids  = [aws_security_group.vpc_endpoints_sg_west.id]
-  
+  provider           = aws.west2
+  vpc_id             = var.vpc_id_west
+  service_name       = "com.amazonaws.us-west-2.ssm"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = [var.subnet_one_west, var.subnet_two_west]
+  security_group_ids = [aws_security_group.vpc_endpoints_sg_west.id]
+
   private_dns_enabled = true
-  
+
   tags = {
     Name = "ssm_vpc_endpoint_west"
   }
@@ -108,15 +134,15 @@ resource "aws_vpc_endpoint" "ssm_west" {
 
 # VPC Endpoint for SSM - East Region
 resource "aws_vpc_endpoint" "ssm_east" {
-  provider            = aws.east
-  vpc_id              = var.vpc_id_east
-  service_name        = "com.amazonaws.us-east-2.ssm"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = [var.subnet_one_east, var.subnet_two_east]
-  security_group_ids  = [aws_security_group.vpc_endpoints_sg_east.id]
-  
+  provider           = aws.east
+  vpc_id             = var.vpc_id_east
+  service_name       = "com.amazonaws.us-east-2.ssm"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = [var.subnet_one_east, var.subnet_two_east]
+  security_group_ids = [aws_security_group.vpc_endpoints_sg_east.id]
+
   private_dns_enabled = true
-  
+
   tags = {
     Name = "ssm_vpc_endpoint_east"
   }
@@ -124,15 +150,15 @@ resource "aws_vpc_endpoint" "ssm_east" {
 
 # VPC Endpoint for SSM Messages - West Region
 resource "aws_vpc_endpoint" "ssmmessages_west" {
-  provider            = aws.west
-  vpc_id              = var.vpc_id_west
-  service_name        = "com.amazonaws.us-west-2.ssmmessages"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = [var.subnet_one_west, var.subnet_two_west]
-  security_group_ids  = [aws_security_group.vpc_endpoints_sg_west.id]
-  
+  provider           = aws.west2
+  vpc_id             = var.vpc_id_west
+  service_name       = "com.amazonaws.us-west-2.ssmmessages"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = [var.subnet_one_west, var.subnet_two_west]
+  security_group_ids = [aws_security_group.vpc_endpoints_sg_west.id]
+
   private_dns_enabled = true
-  
+
   tags = {
     Name = "ssmmessages_vpc_endpoint_west"
   }
@@ -140,15 +166,15 @@ resource "aws_vpc_endpoint" "ssmmessages_west" {
 
 # VPC Endpoint for SSM Messages - East Region
 resource "aws_vpc_endpoint" "ssmmessages_east" {
-  provider            = aws.east
-  vpc_id              = var.vpc_id_east
-  service_name        = "com.amazonaws.us-east-2.ssmmessages"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = [var.subnet_one_east, var.subnet_two_east]
-  security_group_ids  = [aws_security_group.vpc_endpoints_sg_east.id]
-  
+  provider           = aws.east
+  vpc_id             = var.vpc_id_east
+  service_name       = "com.amazonaws.us-east-2.ssmmessages"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = [var.subnet_one_east, var.subnet_two_east]
+  security_group_ids = [aws_security_group.vpc_endpoints_sg_east.id]
+
   private_dns_enabled = true
-  
+
   tags = {
     Name = "ssmmessages_vpc_endpoint_east"
   }
@@ -156,15 +182,15 @@ resource "aws_vpc_endpoint" "ssmmessages_east" {
 
 # VPC Endpoint for EC2 Messages - West Region
 resource "aws_vpc_endpoint" "ec2messages_west" {
-  provider            = aws.west
-  vpc_id              = var.vpc_id_west
-  service_name        = "com.amazonaws.us-west-2.ec2messages"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = [var.subnet_one_west, var.subnet_two_west]
-  security_group_ids  = [aws_security_group.vpc_endpoints_sg_west.id]
-  
+  provider           = aws.west2
+  vpc_id             = var.vpc_id_west
+  service_name       = "com.amazonaws.us-west-2.ec2messages"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = [var.subnet_one_west, var.subnet_two_west]
+  security_group_ids = [aws_security_group.vpc_endpoints_sg_west.id]
+
   private_dns_enabled = true
-  
+
   tags = {
     Name = "ec2messages_vpc_endpoint_west"
   }
@@ -172,15 +198,15 @@ resource "aws_vpc_endpoint" "ec2messages_west" {
 
 # VPC Endpoint for EC2 Messages - East Region
 resource "aws_vpc_endpoint" "ec2messages_east" {
-  provider            = aws.east
-  vpc_id              = var.vpc_id_east
-  service_name        = "com.amazonaws.us-east-2.ec2messages"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = [var.subnet_one_east, var.subnet_two_east]
-  security_group_ids  = [aws_security_group.vpc_endpoints_sg_east.id]
-  
+  provider           = aws.east
+  vpc_id             = var.vpc_id_east
+  service_name       = "com.amazonaws.us-east-2.ec2messages"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = [var.subnet_one_east, var.subnet_two_east]
+  security_group_ids = [aws_security_group.vpc_endpoints_sg_east.id]
+
   private_dns_enabled = true
-  
+
   tags = {
     Name = "ec2messages_vpc_endpoint_east"
   }
@@ -188,7 +214,7 @@ resource "aws_vpc_endpoint" "ec2messages_east" {
 
 # Create a Security Group for instances - West Region
 resource "aws_security_group" "instance_SG_west" {
-  provider    = aws.west
+  provider    = aws.west2
   name        = "Instance_SG_West"
   description = "Configuration of SG for ec2 in West region"
   vpc_id      = var.vpc_id_west
@@ -206,7 +232,7 @@ resource "aws_security_group" "instance_SG_west" {
   egress {
     from_port        = 0
     to_port          = 0
-    protocol         = "-1" 
+    protocol         = "-1"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }

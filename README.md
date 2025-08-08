@@ -1,10 +1,10 @@
-# AWS Systems Manager (SSM) Multi-Region Infrastructure with Terraform
+# AWS Systems Manager (SSM) Multi-Region Infrastructure with Terraform (Backups + Monitoring)
 
-A secure, scalable Infrastructure as Code (IaC) solution demonstrating multi-region AWS architecture using Terraform modules for EC2 instance management via AWS Systems Manager without traditional SSH access. This project showcases enterprise-grade infrastructure deployment across US-West-2 and US-East-2 regions with comprehensive security, networking, and compute modules, including Apache web servers for testing connectivity.
+A secure, scalable Infrastructure as Code (IaC) solution demonstrating multi-region AWS architecture using Terraform modules for EC2 instance management via AWS Systems Manager without traditional SSH access. This project showcases enterprise-grade infrastructure deployment across US-West-2 and US-East-2 regions with comprehensive security, networking, compute, automated backups with cross-region copy (to us-west-1), and monitoring (CloudWatch dashboards, alarms, and budgets). East region exposes simple Apache web servers for testing; West region remains private (SSM-only).
 
 ## 🏗️ Architecture Overview
 
-This project implements a modern cloud infrastructure pattern that prioritizes security, scalability, and operational excellence by leveraging AWS Systems Manager for secure instance access across multiple AWS regions without exposing SSH ports or requiring bastion hosts. The multi-region design provides high availability, disaster recovery capabilities, and geographic distribution of resources.
+This project implements a modern cloud infrastructure pattern that prioritizes security, scalability, and operational excellence by leveraging AWS Systems Manager for secure instance access across multiple AWS regions without exposing SSH ports or requiring bastion hosts. The multi-region design provides high availability, disaster recovery capabilities, and geographic distribution of resources. Automated backups run hourly per source region and are copied to a consolidation vault in us-west-1 for DR.
 
 ### Multi-Region Architecture Diagram
 
@@ -43,6 +43,18 @@ US-WEST-2 (Primary Region)                          US-EAST-2 (Secondary Region)
                                   │    Manager      │
                                   │ (Global Service)│
                                   └─────────────────┘
+
+                              ┌────────────────────────────┐
+                              │       AWS Backup (per Rgn) │
+                              │  Plan + Vault (west/east)  │
+                              └─────────────┬──────────────┘
+                                            │ copy_action
+                                            ▼
+                                 ┌─────────────────────────┐
+                                 │  DR Vault (us-west-1)   │
+                                 │ ec2_backup_vault_west   │
+                                 │        _copy            │
+                                 └─────────────────────────┘
 ```
 
 ## 🚀 Key Features
@@ -50,7 +62,7 @@ US-WEST-2 (Primary Region)                          US-EAST-2 (Secondary Region)
 ### Multi-Region Deployment
 - **Primary Region**: US-West-2 (Oregon) with private instances
 - **Secondary Region**: US-East-2 (Ohio) with public-facing instances
-- **Secondary Region**: US-East-2 (Ohio) for disaster recovery and load distribution
+- **DR Copy Region**: US-West-1 (N. California) consolidation vault for cross-region backup copies
 - **Cross-Region Consistency**: Identical infrastructure patterns across regions
 - **Geographic Distribution**: Reduced latency for global user base
 
@@ -63,16 +75,23 @@ US-WEST-2 (Primary Region)                          US-EAST-2 (Secondary Region)
 
 ### Infrastructure as Code
 - **Modular Terraform Architecture**: Reusable, maintainable code structure
-- **Multi-Provider Support**: Dual AWS provider configuration for region management
+- **Multi-Provider Support**: Multiple AWS provider aliases (west1, west2, east) for region management
 - **State Management**: Consistent infrastructure deployments across regions
 - **Version Control**: Trackable infrastructure changes with semantic versioning
 
 ### Operational Excellence
 - **Session Manager Integration**: Browser-based and CLI access across regions
-- **Audit Logging**: All sessions logged via CloudTrail in both regions
+- **Audit Logging**: Session start/stop via CloudTrail
 - **High Availability**: Multi-AZ deployment within each region
 - **Disaster Recovery**: Cross-region redundancy for business continuity
 - **Cost Optimization**: No NAT Gateway required for SSM communication
+
+### Backup & Monitoring
+- **Automated Backups**: Hourly EC2 backups in us-west-2 and us-east-2
+- **Cross-Region Copy**: Backup copies to us-west-1 vault with 30-day retention
+- **CloudWatch Dashboards**: Per-region dashboards with CPU/network widgets
+- **Alarms**: CPU utilization alarms for all instances
+- **Budgets**: Monthly cost budget with email alerts
 
 ## 📁 Project Structure
 
@@ -100,6 +119,14 @@ aws-ssm-project/
 │       ├── main.tf              # VPC peering connection and route configuration
 │       ├── variables.tf         # Module variables for peering setup
 │       └── output.tf            # Peering outputs (connection IDs, status)
+│   ├── backup/                  # AWS Backup plans, vaults, selections, cross-region copy
+│   │   ├── main.tf              # Plans with copy_action to us-west-1, vault policies
+│   │   ├── variables.tf         # Backup inputs (instance IDs, role ARN)
+│   │   └── output.tf            # Backup-related outputs
+│   └── monitoring/              # Dashboards, alarms, budgets, log groups/policies
+│       ├── main.tf              # CloudWatch dashboards/alarms/budgets, SSM log groups
+│       ├── variables.tf         # Monitoring inputs (instance IDs, project name)
+│       └── output.tf            # Dashboard names/URLs, alarm names, log group names
 └── README.md                    # Project documentation
 ```
 
@@ -109,6 +136,9 @@ aws-ssm-project/
 - **AWS EC2**: Compute instances
 - **AWS VPC**: Network isolation
 - **AWS Systems Manager**: Secure instance access
+- **AWS Backup**: Automated backups and cross‑region copy
+- **Amazon CloudWatch**: Dashboards, alarms, log groups, resource policies
+- **AWS Budgets**: Cost monitoring and email alerts
 - **AWS IAM**: Identity and access management
 - **AWS VPC Endpoints**: Private service communication
 
@@ -289,6 +319,43 @@ aws ec2 describe-route-tables --region us-west-2 --query 'RouteTables[*].Routes[
 aws ec2 describe-route-tables --region us-east-2 --query 'RouteTables[*].Routes[?VpcPeeringConnectionId!=null]'
 ```
 
+## 🔄 Backups and Disaster Recovery
+
+This project configures automated EC2 backups with cross‑region copy:
+
+- Source Regions: us-west-2 and us-east-2
+- Schedule: Hourly (cron(0 * * * ? *))
+- Source Retention: 14 days
+- Cross-Region Copy: Destination vault in us-west-1
+- Copy Retention: 30 days in destination vault
+- Implementation: `copy_action` within backup plan rules (no deprecated/unsupported resources)
+
+Vaults
+- us-west-2: `ec2_backup_vault_west1` (source)
+- us-east-2: `ec2_backup_vault_east` (source)
+- us-west-1: `ec2_backup_vault_west_copy` (destination/consolidation)
+
+Verify backups and copies
+```bash
+# Source backups
+aws backup list-backup-jobs --region us-west-2 --max-results 20
+aws backup list-backup-jobs --region us-east-2 --max-results 20
+
+# Cross-region copy jobs
+aws backup list-copy-jobs --region us-west-2 --max-results 20
+aws backup list-copy-jobs --region us-east-2 --max-results 20
+
+# Destination recovery points (DR vault in us-west-1)
+aws backup list-recovery-points-by-backup-vault \
+    --backup-vault-name ec2_backup_vault_west_copy \
+    --region us-west-1
+```
+
+Notes
+- Copy jobs can take 10–30+ minutes depending on AMI size; check again if the DR vault is briefly empty.
+- IAM role `backup_selection_role` is attached to selections and used by AWS Backup for jobs and copies.
+- Instance selections include both instances per region via their ARNs.
+
 ## 🏢 Enterprise Benefits
 
 ### Security Compliance
@@ -446,7 +513,6 @@ sudo cat /var/log/cloud-init-output.log
 ### Session Manager Logs
 Session Manager logs are available in both regions:
 - **CloudTrail**: API calls and session starts (per region)
-- **CloudWatch Logs**: Session data (if configured, per region)
 
 ### Common Issues and Solutions
 
@@ -561,6 +627,7 @@ This project demonstrates:
 - **Core Services**: EC2, VPC, IAM, Systems Manager across multiple regions
 - **Networking**: VPC Endpoints, Security Groups, Elastic IPs, Cross-region VPC peering
 - **Advanced Patterns**: Multi-region architecture, VPC peering, cost optimization, and security best practices
+- **Data Protection**: Automated backups with cross‑region copy and retention policies
 - **Provider Management**: Advanced Terraform multi-provider configuration with regional resource management
 - **Cross-Region Connectivity**: Implemented secure private communication between geographically distributed VPCs
 
@@ -568,6 +635,7 @@ This project demonstrates:
 - **Elastic IPs**: Public accessibility for web services in the east region
 - **Apache HTTP Servers**: Demonstrated web application deployment and management
 - **Monitoring**: Comprehensive logging and troubleshooting procedures
+- **Backups/DR**: Hourly backups and cross‑region copy with lifecycle management
 - **Documentation**: Detailed operational procedures for maintenance and troubleshooting
 - **Security Groups**: Properly configured for both private (west) and public (east) access patterns
 
@@ -586,8 +654,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 📞 Contact
 
 **Jordan** - [LinkedIn](https://linkedin.com/in/sumnertech) - [Resume Website](https://sumnertech.net)
-
-Project Link: [https://github.com/JordanSum/terraform-aws-ssm-project](https://github.com/JordanSum/terraform-aws-ssm-project)
 
 ---
 

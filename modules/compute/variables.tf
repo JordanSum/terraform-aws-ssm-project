@@ -36,17 +36,17 @@ variable "ami_id_east" {
 variable "instance_type" {
   description = "Instance type for EC2 instances"
   type        = string
-  
+
 }
 
 variable "instance_SG_west" {
   description = "Security Group ID for the EC2 instances in West region"
   type        = string
-  
+
 }
 
 variable "instance_SG_east" {
   description = "Security Group ID for the EC2 instances in East region"
   type        = string
-  
+
 }

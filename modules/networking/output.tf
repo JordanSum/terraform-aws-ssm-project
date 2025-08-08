@@ -22,10 +22,10 @@ output "subnet_two_east" {
   value = aws_subnet.subnet_two_east.id
 }
 
-output "route_table_ids_west" { 
+output "route_table_ids_west" {
   value = [aws_route_table.public_west.id]
 }
 
-output "route_table_ids_east" { 
+output "route_table_ids_east" {
   value = [aws_route_table.public_east.id]
 }
